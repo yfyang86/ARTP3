@@ -1,7 +1,7 @@
 #ifndef BUFFER_BIN_ARTPS
 #define BUFFER_BIN_ARTPS
 
-#define BUFFER_FREAD_ENABLE
+//#define BUFFER_FREAD_ENABLE
 //#define PRINT_DEB
 /*
 Task:
@@ -48,7 +48,8 @@ Verified: testbuffer1.cpp
 	const long size_len = (long)nrow*((long)ncol)*mul; // verify size_len == size
 	size_t sizeA = nrow*ncol;
 	// buffer read, type = float
-	char * buffer = (char *)malloc(sizeof(char)*size_len);
+	int sizeoflen1 = sizeof(char);
+	char * buffer = (char *)malloc(sizeoflen1*size_len+16);
 	if (buffer == NULL) {
 		std::cout << "Out of Memory." << std::endl;
 		exit(1);
@@ -58,7 +59,7 @@ Verified: testbuffer1.cpp
 	fin.read(buffer, size_len);
 #else
 	freopen(filename.c_str(),"rb", stdin);
-	fread(buffer,1,size_len, stdin);
+	fread(buffer,sizeof(char),size_len, stdin);
 #endif
 	float * buffer_float = (float *)buffer;  //TODO: recasting char* to float *
 #ifdef PRINT_DEB
