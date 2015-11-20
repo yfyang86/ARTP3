@@ -1,7 +1,7 @@
 #ifndef BUFFER_BIN_ARTPS
 #define BUFFER_BIN_ARTPS
 
-//#define BUFFER_FREAD_ENABLE
+#define BUFFER_FREAD_ENABLE
 //#define PRINT_DEB
 /*
 Task:
@@ -47,33 +47,32 @@ Verified: testbuffer1.cpp
 	size_t mul = sizeof(float) / sizeof(char); // mul >= 2
 	const long size_len = (long)nrow*((long)ncol)*mul; // verify size_len == size
 	size_t sizeA = nrow*ncol;
+	char * buffer ;
 	// buffer read, type = float
-	int sizeoflen1 = sizeof(char);
-	char * buffer = (char *)malloc(sizeoflen1*size_len+16);
-	if (buffer == NULL) {
-		std::cout << "Out of Memory." << std::endl;
-		exit(1);
-	}
 #ifndef BUFFER_FREAD_ENABLE
+buffer = (char *)malloc(sizeof(char)*size_len);
+	if (buffer == NULL) {fputs ("Memory error",stderr); exit (2);}
 	std::ifstream fin(filename.c_str(), std::ios::in | std::ios::binary);
 	fin.read(buffer, size_len);
+	fin.close();
 #else
-	freopen(filename.c_str(),"rb", stdin);
-	fread(buffer,sizeof(char),size_len, stdin);
+  size_t fread_result;
+	FILE * fstdin = fopen(filename.c_str(),"rb");
+	if (stdin==NULL) {fputs ("File error",stderr); exit (1);}
+  buffer = (char*) malloc (sizeof(char)*size_len);
+	if (buffer == NULL) {fputs ("Memory error",stderr); exit (2);}
+	fread_result=fread(buffer,1,size_len, fstdin);
+	if (fread_result != size_len) {fputs ("Reading error",stderr); exit (3);}
+	fclose(fstdin);
 #endif
-	float * buffer_float = (float *)buffer;  //TODO: recasting char* to float *
 #ifdef PRINT_DEB
+	float * buffer_float = (float *)buffer;  //TODO: recasting char* to float *
 	for (int i = 0; i < nrow; i++) {
 		std::cout << "\n[" << i << ",]:\t";
 		for (int j = 0; j < ncol; j++)
 			std::cout << buffer_float[i*ncol + j] << "\t";
 	}
 	std::cout << "\n";
-#endif
-#ifndef BUFFER_FREAD_ENABLE
-	fin.close();
-#else
-	fclose(stdin);
 #endif
 	int i;
 #pragma omp parallel
@@ -82,10 +81,10 @@ Verified: testbuffer1.cpp
 		for (i = 0; i < sizeA; i++) {
 			int ii = i%nrow;// Row
 			int jj = i/nrow;// Col
-			output[ii][jj].stat = buffer_float[i];
+			output[ii][jj].stat = ((float *)buffer)[i];
 			output[ii][jj].id= jj;
 		}
 	}
-	free(buffer);
+free(buffer);
 }
 #endif
